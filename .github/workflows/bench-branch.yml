@@ -10,7 +10,7 @@ permissions:
 jobs:
   bench:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -19,15 +19,17 @@ jobs:
         with:
           node-version: lts/*
       - run: npm install --no-audit --no-fund
-      - name: Bench current branch
-        run: node --expose-gc ./benchmark/bench.js | tee bench-branch.txt
-      - name: Bench main
+      - name: Bench alternating passes (branch, main, branch, main)
         run: |
+          node -v | tee node-version.txt
           git fetch origin main --depth=1
-          git checkout FETCH_HEAD -- lib/
-          git checkout HEAD -- benchmark/bench.js
-          node --expose-gc ./benchmark/bench.js | tee bench-main.txt
-      - name: Compare
+          for i in 1 2; do
+            node --expose-gc ./benchmark/bench.js | tee "bench-branch-$i.txt"
+            git checkout FETCH_HEAD -- lib/
+            node --expose-gc ./benchmark/bench.js | tee "bench-main-$i.txt"
+            git checkout HEAD -- lib/
+          done
+      - name: Compare (max per case across passes)
         run: |
           node -e '
             const fs = require("fs")
@@ -39,8 +41,16 @@ jobs:
               }
               return out
             }
-            const main = parse(fs.readFileSync("bench-main.txt", "utf8"))
-            const branch = parse(fs.readFileSync("bench-branch.txt", "utf8"))
+            const side = (prefix) => {
+              const acc = {}
+              for (const f of fs.readdirSync(".").filter((f) => f.startsWith(prefix))) {
+                const r = parse(fs.readFileSync(f, "utf8"))
+                for (const [k, v] of Object.entries(r)) acc[k] = Math.max(acc[k] ?? 0, v)
+              }
+              return acc
+            }
+            const main = side("bench-main-")
+            const branch = side("bench-branch-")
             let wins = 0, regress = 0
             for (const [name, hz] of Object.entries(branch)) {
               if (!(name in main)) continue
@@ -54,4 +64,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: benchmark-results
-          path: bench-*.txt
+          path: |
+            bench-*.txt
+            node-version.txt
