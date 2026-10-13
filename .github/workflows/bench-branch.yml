@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
-      - run: npm ci --no-audit --no-fund
+      - run: npm ci --no-audit
       - name: Bench current branch
         run: node --expose-gc ./benchmark/bench.js | tee bench-branch.txt
       - name: Bench main
