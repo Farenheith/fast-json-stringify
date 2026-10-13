@@ -11,6 +11,7 @@ const SHORT_ARRAY_SIZE = 1e3
 const shortArrayOfNumbers = new Array(SHORT_ARRAY_SIZE)
 const shortArrayOfIntegers = new Array(SHORT_ARRAY_SIZE)
 const shortArrayOfShortStrings = new Array(SHORT_ARRAY_SIZE)
+const shortArrayOfMidStrings = new Array(SHORT_ARRAY_SIZE)
 const shortArrayOfLongStrings = new Array(SHORT_ARRAY_SIZE)
 const shortArrayOfMultiObject = new Array(SHORT_ARRAY_SIZE)
 
@@ -35,6 +36,7 @@ for (let i = 0; i < SHORT_ARRAY_SIZE; i++) {
   shortArrayOfNumbers[i] = getRandomInt(1000)
   shortArrayOfIntegers[i] = getRandomInt(1000)
   shortArrayOfShortStrings[i] = 'hello world'
+  shortArrayOfMidStrings[i] = 'Lorem ipsum dolor sit amet consec'
   shortArrayOfLongStrings[i] = longString
   shortArrayOfMultiObject[i] = { s: 'hello world', n: 42, b: true }
 }
@@ -155,6 +157,14 @@ const benchmarks = [
     input: shortArrayOfShortStrings
   },
   {
+    name: 'short array of mid length strings',
+    schema: {
+      type: 'array',
+      items: { type: 'string' }
+    },
+    input: shortArrayOfMidStrings
+  },
+  {
     name: 'short array of long strings',
     schema: {
       type: 'array',
@@ -216,6 +226,30 @@ const benchmarks = [
       }
     },
     input: { a: longString }
+  },
+  {
+    name: 'mid length string',
+    schema: {
+      type: 'string'
+    },
+    input: 'Lorem ipsum dolor sit amet consec'
+  },
+  {
+    name: 'mid length string with double quote',
+    schema: {
+      type: 'string'
+    },
+    input: 'Lorem "ipsum" dolor sit amet conse'
+  },
+  {
+    name: 'object with mid length string property',
+    schema: {
+      type: 'object',
+      properties: {
+        a: { type: 'string' }
+      }
+    },
+    input: { a: 'Lorem ipsum dolor sit amet consec' }
   },
   {
     name: 'object with properties of different types',
